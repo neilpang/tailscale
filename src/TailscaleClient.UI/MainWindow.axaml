@@ -1,0 +1,98 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:TailscaleClient.UI.ViewModels"
+        xmlns:views="using:TailscaleClient.UI.Views"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="940" d:DesignHeight="640"
+        x:Class="TailscaleClient.UI.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="Tailscale" Width="940" Height="640" MinWidth="720" MinHeight="480"
+        Background="#F9FAFB"
+        WindowStartupLocation="CenterScreen"
+        FontFamily="Inter,Segoe UI,system-ui" FontSize="13">
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="White" Padding="20,16"
+                BorderBrush="#E5E7EB" BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Ellipse Width="14" Height="14" Margin="0,0,10,0"
+                             Fill="{Binding Service.BackendState, Converter={StaticResource StateToColor}}" />
+                    <StackPanel>
+                        <TextBlock FontSize="16" FontWeight="SemiBold"
+                                   Text="{Binding Service.BackendState, Converter={StaticResource StateToText}}" />
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Classes="muted" FontSize="12"
+                                       Text="{Binding Service.Self.DisplayName, FallbackValue='(not logged in)'}" />
+                            <TextBlock Classes="muted" FontSize="12" Text=" · " />
+                            <TextBlock Classes="muted" FontSize="12"
+                                       Text="{Binding Service.TailnetName, FallbackValue=''}" />
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Classes="primary" Content="Sign in"
+                            Command="{Binding LoginCommand}"
+                            IsVisible="{Binding Service.CanSignIn}" />
+                    <Button Classes="primary" Content="Connect"
+                            Command="{Binding ConnectCommand}"
+                            IsVisible="{Binding Service.CanConnect}" />
+                    <Button Classes="secondary" Content="Disconnect"
+                            Command="{Binding DisconnectCommand}"
+                            IsVisible="{Binding Service.CanDisconnect}" />
+                    <Button Classes="secondary" Content="Refresh"
+                            Command="{Binding RefreshCommand}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Auth banner -->
+        <Border Grid.Row="1" Background="#FEF3C7" Padding="20,10"
+                IsVisible="{Binding Service.HasAuthUrl}">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock FontWeight="SemiBold" Text="Authentication required" Foreground="#92400E" />
+                    <TextBlock Foreground="#92400E" TextWrapping="Wrap"
+                               Text="Open the link to finish signing in." />
+                </StackPanel>
+                <Button Grid.Column="1" Classes="primary"
+                        Content="Open browser"
+                        Command="{Binding OpenAuthUrlCommand}" />
+            </Grid>
+        </Border>
+
+        <!-- Tabs -->
+        <TabControl Grid.Row="2" Margin="16">
+            <TabItem Header="Devices">
+                <views:DevicesView />
+            </TabItem>
+            <TabItem Header="Exit Node">
+                <views:ExitNodeView />
+            </TabItem>
+            <TabItem Header="Settings">
+                <views:SettingsView />
+            </TabItem>
+            <TabItem Header="Taildrop">
+                <views:TaildropView />
+            </TabItem>
+        </TabControl>
+
+        <!-- Status bar -->
+        <Border Grid.Row="3" Background="White" BorderBrush="#E5E7EB" BorderThickness="0,1,0,0" Padding="20,6">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0" Foreground="#DC2626" FontSize="12"
+                           Text="{Binding Service.LastError}"
+                           IsVisible="{Binding Service.HasError}" />
+                <TextBlock Grid.Column="1" Foreground="#9CA3AF" FontSize="12">
+                    <Run Text="tailscaled" />
+                    <Run Text="{Binding Service.Status.Version, FallbackValue='—'}" />
+                </TextBlock>
+            </Grid>
+        </Border>
+
+    </Grid>
+</Window>

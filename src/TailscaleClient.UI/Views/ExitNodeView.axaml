@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:TailscaleClient.UI.ViewModels"
+             xmlns:m="using:TailscaleClient.Core.Models"
+             x:Class="TailscaleClient.UI.Views.ExitNodeView"
+             x:DataType="vm:MainViewModel">
+    <Border Classes="card" Padding="16">
+        <Grid RowDefinitions="Auto,Auto,Auto,*">
+            <TextBlock Grid.Row="0" FontSize="15" FontWeight="SemiBold" Text="Exit node" />
+            <TextBlock Grid.Row="1" Foreground="#6B7280" TextWrapping="Wrap" Margin="0,4,0,12"
+                       Text="Route all internet traffic through another machine on your tailnet." />
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,12">
+                <TextBlock VerticalAlignment="Center" Text="Currently:" Margin="0,0,8,0" />
+                <TextBlock VerticalAlignment="Center" FontWeight="SemiBold"
+                           Text="{Binding Service.CurrentExitNodeName}" />
+                <Button Margin="16,0,0,0" Classes="secondary"
+                        Content="Don't use any"
+                        Command="{Binding ClearExitNodeCommand}" />
+                <CheckBox Margin="16,0,0,0" VerticalAlignment="Center"
+                          Content="Allow LAN access"
+                          IsChecked="{Binding Service.ExitNodeAllowLan, Mode=OneWay}"
+                          Click="ExitNodeAllowLan_Click" />
+            </StackPanel>
+
+            <ScrollViewer Grid.Row="3">
+                <ItemsControl ItemsSource="{Binding Service.ExitNodeCandidates}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="m:PeerStatus">
+                            <Border Padding="12" Margin="0,0,0,8" CornerRadius="4"
+                                    BorderBrush="#E5E7EB" BorderThickness="1" Background="#F9FAFB">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock FontWeight="SemiBold" Text="{Binding DisplayName}" />
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Classes="muted" Text="{Binding OS}" />
+                                            <TextBlock Classes="muted" Text=" · " />
+                                            <TextBlock Classes="muted"
+                                                       Text="{Binding TailscaleIPs, Converter={StaticResource FirstOrEmpty}}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Classes="primary"
+                                            Content="Use as exit node"
+                                            Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).SetExitNodeCommand}"
+                                            CommandParameter="{Binding}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+    </Border>
+</UserControl>

@@ -1,0 +1,44 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Pp]ublish/
+[Rr]eleases/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+
+# Logs / runtime
+*.log
+*.tlog
+*.binlog
+*.cache
+
+# JetBrains Rider
+_ReSharper*/
+*.[Rr]e[Ss]harper
+
+# Test results
+TestResults/
+[Cc]overage/
+
+# Local dev artifacts
+screenshot*.png

@@ -1,0 +1,73 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:TailscaleClient.UI.ViewModels"
+             xmlns:la="using:TailscaleClient.Core.LocalApi"
+             xmlns:m="using:TailscaleClient.Core.Models"
+             x:Class="TailscaleClient.UI.Views.TaildropView"
+             x:DataType="vm:MainViewModel">
+
+    <Grid RowDefinitions="*,*">
+
+        <!-- Received files -->
+        <Border Grid.Row="0" Classes="card" Padding="16" Margin="0,0,0,12">
+            <DockPanel>
+                <Grid DockPanel.Dock="Top" Margin="0,0,0,10" ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0" FontSize="15" FontWeight="SemiBold" Text="Received files" />
+                    <Button Grid.Column="1" Classes="secondary" Content="Refresh"
+                            Click="RefreshReceived_Click" />
+                </Grid>
+                <ListBox x:Name="ReceivedList" BorderThickness="0" Background="Transparent">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="la:TaildropFile">
+                            <Border Padding="10,8" BorderBrush="#F3F4F6" BorderThickness="0,0,0,1">
+                                <Grid ColumnDefinitions="*,100,140,Auto">
+                                    <TextBlock Grid.Column="0" VerticalAlignment="Center"
+                                               Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" Classes="muted"
+                                               Text="{Binding Size, Converter={StaticResource HumanBytes}}" />
+                                    <TextBlock Grid.Column="2" VerticalAlignment="Center" Classes="muted"
+                                               Text="{Binding FinishedAt, Converter={StaticResource RelativeTime}}" />
+                                    <StackPanel Grid.Column="3" Orientation="Horizontal">
+                                        <Button Classes="secondary tiny" Content="Save…"
+                                                Click="Save_Click" Tag="{Binding}" />
+                                        <Button Classes="danger tiny" Content="Delete"
+                                                Click="Delete_Click" Tag="{Binding}" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- Send file -->
+        <Border Grid.Row="1" Classes="card" Padding="16">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" FontSize="15" FontWeight="SemiBold"
+                           Text="Send a file" Margin="0,0,0,10" />
+                <TextBlock DockPanel.Dock="Top" Foreground="#6B7280" Margin="0,0,0,10"
+                           Text="Click Send file to pick a destination." />
+                <ScrollViewer>
+                    <ItemsControl ItemsSource="{Binding Service.SortedPeers}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="m:PeerStatus">
+                                <Border Padding="10" Margin="0,0,0,6" CornerRadius="4"
+                                        BorderBrush="#E5E7EB" BorderThickness="1" Background="#F9FAFB">
+                                    <Grid ColumnDefinitions="20,*,Auto">
+                                        <Ellipse Grid.Column="0" Width="10" Height="10" HorizontalAlignment="Left"
+                                                 Fill="{Binding Online, Converter={StaticResource OnlineToBrush}}" />
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding DisplayName}" />
+                                        <Button Grid.Column="2" Classes="secondary tiny" Content="Send file"
+                                                Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).SendFileToCommand}"
+                                                CommandParameter="{Binding}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TailscaleClient.Core/TailscaleClient.Core.csproj" />
+    <Project Path="src/TailscaleClient.UI/TailscaleClient.UI.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TailscaleClient.Smoke/TailscaleClient.Smoke.csproj" />
+  </Folder>
+</Solution>

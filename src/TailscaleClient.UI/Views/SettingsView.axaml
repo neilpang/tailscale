@@ -1,0 +1,74 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:TailscaleClient.UI.ViewModels"
+             x:Class="TailscaleClient.UI.Views.SettingsView"
+             x:DataType="vm:MainViewModel">
+    <ScrollViewer>
+        <StackPanel>
+            <Border Classes="card" Padding="16" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock FontSize="15" FontWeight="SemiBold" Text="Network" Margin="0,0,0,8" />
+
+                    <CheckBox Margin="0,4" Content="Use Tailscale DNS (MagicDNS)"
+                              IsChecked="{Binding Service.AcceptDns, Mode=OneWay}"
+                              Click="AcceptDns_Click" />
+                    <TextBlock Classes="muted" Margin="26,0,0,8"
+                               Text="Resolve devices by name and use the tailnet's configured DNS." />
+
+                    <CheckBox Margin="0,4" Content="Accept subnet routes"
+                              IsChecked="{Binding Service.AcceptRoutes, Mode=OneWay}"
+                              Click="AcceptRoutes_Click" />
+                    <TextBlock Classes="muted" Margin="26,0,0,8"
+                               Text="Route traffic for subnets advertised by other peers." />
+
+                    <CheckBox Margin="0,4" Content="Block incoming connections (shields up)"
+                              IsChecked="{Binding Service.ShieldsUp, Mode=OneWay}"
+                              Click="ShieldsUp_Click" />
+                    <TextBlock Classes="muted" Margin="26,0,0,8"
+                               Text="Drop all unsolicited inbound traffic from your tailnet." />
+
+                    <CheckBox Margin="0,4" Content="Run Tailscale SSH server"
+                              IsChecked="{Binding Service.RunSsh, Mode=OneWay}"
+                              Click="RunSsh_Click" />
+                    <TextBlock Classes="muted" Margin="26,0,0,8"
+                               Text="Allow other tailnet users with the right ACL to SSH into this machine." />
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card" Padding="16" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock FontSize="15" FontWeight="SemiBold" Text="Advertise subnet routes" Margin="0,0,0,8" />
+                    <TextBlock Foreground="#6B7280" Margin="0,0,0,8" TextWrapping="Wrap"
+                               Text="Comma-separated CIDR list. Subnet routing must also be approved in the admin console." />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBox x:Name="RoutesBox" Grid.Column="0" Padding="8,6" Margin="0,0,8,0" />
+                        <Button Grid.Column="1" Classes="primary" Content="Apply" Click="ApplyRoutes_Click" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                        <TextBlock Classes="muted" Text="Current: " />
+                        <TextBlock Classes="muted"
+                                   Text="{Binding Service.AdvertisedRoutes, Converter={StaticResource IpList}}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card" Padding="16">
+                <StackPanel>
+                    <TextBlock FontSize="15" FontWeight="SemiBold" Text="Account" Margin="0,0,0,8" />
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Foreground="#6B7280" Text="Logged in as: " />
+                        <TextBlock Foreground="#6B7280" Text="{Binding Service.Self.DNSName, FallbackValue='—'}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,4,0,12">
+                        <TextBlock Foreground="#6B7280" Text="Tailnet: " />
+                        <TextBlock Foreground="#6B7280" Text="{Binding Service.TailnetName, FallbackValue='—'}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Classes="secondary" Content="Sign in again" Command="{Binding LoginCommand}" />
+                        <Button Classes="danger" Content="Log out" Command="{Binding LogoutCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
