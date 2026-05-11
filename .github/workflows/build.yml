@@ -22,11 +22,8 @@ jobs:
             os: windows-latest
             rid: win-x64
           - label: macOS arm64
-            os: macos-14
+            os: macos-latest
             rid: osx-arm64
-          - label: macOS x64
-            os: macos-13
-            rid: osx-x64
     runs-on: ${{ matrix.os }}
     env:
       DOTNET_NOLOGO: 1

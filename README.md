@@ -45,11 +45,11 @@ dotnet run --project tests/TailscaleClient.Smoke -- --ping 100.x   # diagnose pi
 
 ```bash
 dotnet publish src/TailscaleClient.UI -r osx-arm64 -c Release \
-  -p:PublishSingleFile=true --self-contained false
-# or for Intel:
-dotnet publish src/TailscaleClient.UI -r osx-x64   -c Release \
-  -p:PublishSingleFile=true --self-contained false
+  -p:PublishSingleFile=true --self-contained true
 ```
+
+Apple Silicon only — Intel Macs aren't built in CI. If you need an Intel build,
+swap `osx-arm64` for `osx-x64` and build from source.
 
 For a proper double-clickable `.app` bundle, wrap the published binary with
 [`dotnet-bundle`](https://github.com/egramtel/dotnet-bundle) or hand-author
@@ -117,13 +117,12 @@ its mask.
 push and PR to `main` and on `v*` tags:
 
 - **`windows-latest`** → `TailscaleClient-{ver}-win-x64.zip`
-- **`macos-14`** (Apple Silicon) → `TailscaleClient-{ver}-osx-arm64.zip` (a `.app` bundle)
-- **`macos-13`** (Intel) → `TailscaleClient-{ver}-osx-x64.zip` (a `.app` bundle)
+- **`macos-latest`** (Apple Silicon) → `TailscaleClient-{ver}-osx-arm64.zip` (a `.app` bundle)
 
 All builds are self-contained single-file (no .NET runtime install needed on the
-target machine). macOS bundles are ad-hoc-signed so they launch without the
-right-click-Open Gatekeeper dance, but they're not notarized — push them
-through `codesign --force --deep --sign 'Developer ID Application: …'` and
+target machine). The macOS bundle is ad-hoc-signed so it launches without the
+right-click-Open Gatekeeper dance, but it's not notarized — push it through
+`codesign --force --deep --sign 'Developer ID Application: …'` and
 `xcrun notarytool submit` for real distribution.
 
 Cut a release with:
@@ -132,7 +131,7 @@ Cut a release with:
 git tag v0.1.0 && git push origin v0.1.0
 ```
 
-The workflow attaches all three zips to a GitHub release tagged that version.
+The workflow attaches both zips to a GitHub release tagged that version.
 
 ## Known limitations
 
