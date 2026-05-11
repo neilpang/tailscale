@@ -30,17 +30,21 @@
                             <Border Padding="12" Margin="0,0,0,8" CornerRadius="4"
                                     BorderBrush="#E5E7EB" BorderThickness="1" Background="#F9FAFB">
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <StackPanel Grid.Column="0">
-                                        <TextBlock FontWeight="SemiBold" Text="{Binding DisplayName}" />
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                        <TextBlock FontWeight="SemiBold" FontSize="14"
+                                                   Text="{Binding ShortName}" />
+                                        <TextBlock Classes="muted" Text="{Binding DisplayName}" />
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Classes="muted" Text="{Binding OS}" />
                                             <TextBlock Classes="muted" Text=" · " />
                                             <TextBlock Classes="muted"
-                                                       Text="{Binding TailscaleIPs, Converter={StaticResource FirstOrEmpty}}" />
+                                                       FontFamily="Cascadia Mono,Consolas,monospace"
+                                                       Text="{Binding IPv4}" />
                                         </StackPanel>
                                     </StackPanel>
                                     <Button Grid.Column="1" Classes="primary"
                                             Content="Use as exit node"
+                                            VerticalAlignment="Center"
                                             Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).SetExitNodeCommand}"
                                             CommandParameter="{Binding}" />
                                 </Grid>

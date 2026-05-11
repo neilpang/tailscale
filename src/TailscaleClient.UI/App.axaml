@@ -6,6 +6,7 @@
 
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
 
         <!-- Buttons -->
         <Style Selector="Button.primary">
@@ -89,6 +90,31 @@
         <Style Selector="TabControl">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
+        </Style>
+
+        <!-- Suppress the "current cell" border that DataGrid draws in Avalonia 12.
+             In v12 the indicator is drawn by an unnamed Border inside the cell
+             template, not via the cell's own BorderBrush. Cover both the cell
+             itself and any Border/Rectangle children across all relevant states. -->
+        <Style Selector="DataGridCell">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
+        <Style Selector="DataGridCell:current, DataGridCell:focus, DataGridCell:selected">
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="DataGridCell /template/ Border">
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="DataGridCell:current /template/ Border, DataGridCell:focus /template/ Border, DataGridCell:selected /template/ Border">
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="DataGridCell:current /template/ Rectangle, DataGridCell:focus /template/ Rectangle">
+            <Setter Property="Stroke" Value="Transparent" />
+            <Setter Property="StrokeThickness" Value="0" />
         </Style>
     </Application.Styles>
 

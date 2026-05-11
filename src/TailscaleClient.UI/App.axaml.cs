@@ -34,6 +34,7 @@ public partial class App : Application
             tray.Initialize(window);
 
             window.Show();
+            Toast.Initialize(window);
         }
 
         base.OnFrameworkInitializationCompleted();

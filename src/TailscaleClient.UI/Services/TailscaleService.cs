@@ -1,6 +1,8 @@
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
+using Avalonia.Threading;
 using TailscaleClient.Core.LocalApi;
 using TailscaleClient.Core.Models;
 
@@ -41,9 +43,10 @@ public sealed class TailscaleService : INotifyPropertyChanged, IDisposable
             OnPropertyChanged(nameof(IsRunning)); OnPropertyChanged(nameof(IsLoggedIn));
             OnPropertyChanged(nameof(CanSignIn)); OnPropertyChanged(nameof(CanConnect));
             OnPropertyChanged(nameof(CanDisconnect));
-            OnPropertyChanged(nameof(Self)); OnPropertyChanged(nameof(SortedPeers));
+            OnPropertyChanged(nameof(Self));
             OnPropertyChanged(nameof(ExitNodeCandidates)); OnPropertyChanged(nameof(CurrentExitNodeName));
-            OnPropertyChanged(nameof(TailnetName)); }
+            OnPropertyChanged(nameof(TailnetName));
+            RefreshSortedPeers(); }
     }
 
     public Prefs? Prefs
@@ -89,16 +92,58 @@ public sealed class TailscaleService : INotifyPropertyChanged, IDisposable
     public PeerStatus? Self => _status?.Self;
     public string TailnetName => _status?.CurrentTailnet?.Name ?? "";
 
-    public IReadOnlyList<PeerStatus> SortedPeers
+    /// <summary>
+    /// Stable, observable view of the tailnet sorted online-first by display name.
+    /// We never replace the collection — only diff and merge in place — so UI
+    /// controls' selection survives the 5 s status poll.
+    /// </summary>
+    public ObservableCollection<PeerStatus> SortedPeers { get; } = new();
+
+    private void RefreshSortedPeers()
     {
-        get
+        // Compose the desired list off the UI thread; apply mutations on it.
+        List<PeerStatus> fresh;
+        if (_status?.Peer is null)
         {
-            if (_status?.Peer is null) return Array.Empty<PeerStatus>();
-            return _status.Peer.Values
+            fresh = new List<PeerStatus>();
+        }
+        else
+        {
+            fresh = _status.Peer.Values
                 .OrderByDescending(p => p.Online)
                 .ThenBy(p => p.DisplayName, StringComparer.OrdinalIgnoreCase)
                 .ToList();
         }
+
+        void Apply()
+        {
+            // Drop peers no longer present (IEquatable matches by StableNodeID).
+            for (int i = SortedPeers.Count - 1; i >= 0; i--)
+            {
+                if (!fresh.Contains(SortedPeers[i]))
+                    SortedPeers.RemoveAt(i);
+            }
+            // Insert / update / reorder.
+            for (int i = 0; i < fresh.Count; i++)
+            {
+                var idx = SortedPeers.IndexOf(fresh[i]);
+                if (idx < 0)
+                {
+                    SortedPeers.Insert(Math.Min(i, SortedPeers.Count), fresh[i]);
+                }
+                else
+                {
+                    // Mutate the existing instance so the DataGrid keeps its
+                    // SelectedItem reference; INotifyPropertyChanged on PeerStatus
+                    // refreshes the bound cell content.
+                    SortedPeers[idx].UpdateFrom(fresh[i]);
+                    if (idx != i) SortedPeers.Move(idx, i);
+                }
+            }
+        }
+
+        if (Dispatcher.UIThread.CheckAccess()) Apply();
+        else Dispatcher.UIThread.Post(Apply);
     }
 
     public IReadOnlyList<PeerStatus> ExitNodeCandidates
