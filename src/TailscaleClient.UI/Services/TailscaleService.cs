@@ -324,7 +324,16 @@ public sealed class TailscaleService : INotifyPropertyChanged, IDisposable
 
     public async Task<PingResult?> PingAsync(string ip)
     {
-        try { return await _api.PingAsync(ip, ct: _cts.Token).ConfigureAwait(false); }
+        // Cap the wait at 5s — an unreachable peer would otherwise hang the
+        // request for the full 30s HttpClient timeout, which feels broken.
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token);
+        cts.CancelAfter(TimeSpan.FromSeconds(5));
+        try { return await _api.PingAsync(ip, ct: cts.Token).ConfigureAwait(false); }
+        catch (OperationCanceledException) when (!_cts.IsCancellationRequested)
+        {
+            LastError = "Ping timed out after 5s (peer unreachable?)";
+            return null;
+        }
         catch (Exception ex) { LastError = ex.Message; return null; }
     }
 

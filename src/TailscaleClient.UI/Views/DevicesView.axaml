@@ -118,6 +118,8 @@
                             <DataTemplate DataType="m:PeerStatus">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,4">
                                     <Button Classes="secondary tiny" Content="Ping"
+                                            IsEnabled="{Binding Online}"
+                                            ToolTip.Tip="Offline — cannot ping"
                                             Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).PingPeerCommand}"
                                             CommandParameter="{Binding}" />
                                     <Button Classes="secondary tiny" Content="Send file"
