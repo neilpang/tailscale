@@ -1,5 +1,11 @@
 # TailscaleClient (Avalonia)
 
+[![Build](https://github.com/neilpang/tailscale/actions/workflows/build.yml/badge.svg)](https://github.com/neilpang/tailscale/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/neilpang/tailscale?include_prereleases&sort=semver&display_name=tag)](https://github.com/neilpang/tailscale/releases)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS-blue)](#requirements)
+[![.NET 9](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![Avalonia 12](https://img.shields.io/badge/Avalonia-12.0-883CFF?logo=avaloniaui&logoColor=white)](https://avaloniaui.net/)
+
 A cross-platform C# / Avalonia client for Tailscale that drives the locally-
 installed `tailscaled` daemon via its LocalAPI. No re-implementation of the
 WireGuard data plane — just a GUI shell that talks to the official daemon.
