@@ -15,6 +15,7 @@ namespace TailscaleClient.UI.Services;
 public sealed class TrayService : IDisposable
 {
     private readonly TailscaleService _svc;
+    private readonly IAutostartService _autostart = AutostartService.Create();
     private TrayIcon? _tray;
     private MainWindow? _window;
     private WindowIcon? _runningIcon;
@@ -24,6 +25,7 @@ public sealed class TrayService : IDisposable
     private NativeMenuItem? _disconnectItem;
     private NativeMenuItem? _loginItem;
     private NativeMenuItem? _logoutItem;
+    private NativeMenuItem? _autostartItem;
 
     public TrayService(TailscaleService svc)
     {
@@ -78,6 +80,33 @@ public sealed class TrayService : IDisposable
         _logoutItem = new NativeMenuItem("Log out");
         _logoutItem.Click += async (_, _) => await _svc.LogoutAsync();
         menu.Add(_logoutItem);
+
+        menu.Add(new NativeMenuItemSeparator());
+
+        _autostartItem = new NativeMenuItem("Launch at login")
+        {
+            ToggleType = MenuItemToggleType.CheckBox,
+            IsChecked = _autostart.IsEnabled,
+        };
+        _autostartItem.Click += (_, _) =>
+        {
+            try
+            {
+                if (_autostart.IsEnabled) _autostart.Disable();
+                else _autostart.Enable();
+            }
+            catch (Exception ex)
+            {
+                Toast.Show("Autostart", ex.Message, Avalonia.Controls.Notifications.NotificationType.Error);
+            }
+            // Re-read so the checkbox reflects what's actually on disk / in the
+            // registry, not what we think we did.
+            _autostartItem!.IsChecked = _autostart.IsEnabled;
+            Toast.Show("Launch at login",
+                _autostartItem.IsChecked ? "Enabled" : "Disabled",
+                Avalonia.Controls.Notifications.NotificationType.Information);
+        };
+        menu.Add(_autostartItem);
 
         menu.Add(new NativeMenuItemSeparator());
 
