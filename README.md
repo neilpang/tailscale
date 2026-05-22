@@ -77,7 +77,7 @@ with `sudo`.
 - Sign in / log out (opens auth URL in browser)
 - Connect / disconnect (toggles `WantRunning` via `MaskedPrefs`)
 - Tailnet device list with online state, IP, OS, last-seen, ping, copy IP
-- Exit node picker + "Allow LAN access" toggle
+- Exit node picker + "Don't route LAN through exit node" toggle
 - MagicDNS / Accept-routes / Shields-up / Tailscale-SSH toggles
 - Advertise subnet routes
 - Taildrop: list / save / delete received files, send to a peer (via `StorageProvider`)

@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:TailscaleClient.UI.ViewModels"
+             xmlns:svc="using:TailscaleClient.UI.Services"
              x:Class="TailscaleClient.UI.Views.SettingsView"
              x:DataType="vm:MainViewModel">
     <ScrollViewer>
@@ -39,16 +40,57 @@
                 <StackPanel>
                     <TextBlock FontSize="15" FontWeight="SemiBold" Text="Advertise subnet routes" Margin="0,0,0,8" />
                     <TextBlock Foreground="#6B7280" Margin="0,0,0,8" TextWrapping="Wrap"
-                               Text="Comma-separated CIDR list. Subnet routing must also be approved in the admin console." />
+                               Text="Add a CIDR (or comma-separated list). Subnet routing must also be approved in the admin console." />
                     <Grid ColumnDefinitions="*,Auto">
-                        <TextBox x:Name="RoutesBox" Grid.Column="0" Padding="8,6" Margin="0,0,8,0" />
-                        <Button Grid.Column="1" Classes="primary" Content="Apply" Click="ApplyRoutes_Click" />
+                        <TextBox x:Name="RoutesBox" Grid.Column="0" Padding="8,6" Margin="0,0,8,0"
+                                 PlaceholderText="e.g. 192.168.1.0/24" KeyDown="RoutesBox_KeyDown" />
+                        <Button Grid.Column="1" Classes="primary" Content="Add" Click="AddRoutes_Click" />
                     </Grid>
-                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                        <TextBlock Classes="muted" Text="Current: " />
-                        <TextBlock Classes="muted"
-                                   Text="{Binding Service.AdvertisedRoutes, Converter={StaticResource IpList}}" />
+                    <StackPanel Margin="0,6,0,0">
+                        <TextBlock Classes="muted" Text="Current:" />
+                        <ItemsControl Margin="0,4,0,0" ItemsSource="{Binding Service.AdvertisedRoutes}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1"
+                                            CornerRadius="3" Padding="8,2" Margin="0,0,6,4">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock VerticalAlignment="Center" FontSize="12"
+                                                       FontFamily="Cascadia Mono,Consolas,monospace"
+                                                       Foreground="#1E40AF"
+                                                       Text="{Binding}" />
+                                            <Button Classes="tiny" Margin="6,0,0,0" Padding="6,0"
+                                                    MinWidth="0" Background="Transparent" Foreground="#6B7280"
+                                                    ToolTip.Tip="Remove"
+                                                    Content="×" Click="RemoveRoute_Click" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </StackPanel>
+
+                    <TextBlock Classes="muted" Margin="0,14,0,4" Text="Local network adapters:" />
+                    <ItemsControl x:Name="LocalCidrsList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="svc:LocalCidr">
+                                <Grid ColumnDefinitions="180,*,Auto" Margin="0,2">
+                                    <TextBlock Grid.Column="0" Classes="muted" VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis"
+                                               Text="{Binding InterfaceName}" />
+                                    <TextBlock Grid.Column="1" VerticalAlignment="Center"
+                                               FontFamily="Cascadia Mono,Consolas,monospace" FontSize="12"
+                                               Text="{Binding Cidr}" />
+                                    <Button Grid.Column="2" Classes="secondary" Padding="10,2"
+                                            Content="Add" Click="AddLocalCidr_Click" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
             </Border>
 

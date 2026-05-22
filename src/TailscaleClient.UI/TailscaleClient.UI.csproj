@@ -9,6 +9,22 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <RootNamespace>TailscaleClient.UI</RootNamespace>
     <AssemblyName>TailscaleClient</AssemblyName>
+
+    <!-- Multi-resolution app icon baked into PE resources. Windows Explorer,
+         taskbar, and Alt-Tab pick the right size from 16..256 px. macOS
+         ignores this and uses Info.plist's CFBundleIconFile (we don't ship
+         one yet; falls back to the system default). -->
+    <ApplicationIcon>Assets\tailscale.ico</ApplicationIcon>
+
+    <!-- Halve the single-file publish size with LZ4 compression of embedded
+         payloads. Tradeoff: ~200-300ms extra cold-start to decompress.
+         Only takes effect when PublishSingleFile=true. -->
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+
+    <!-- No debug symbols at all in release publishes. Embedded PDBs would
+         still add a few hundred KB and leak internal field names. -->
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,5 +45,19 @@
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
+
+  <!-- Strip native debug symbols from the publish output. SkiaSharp and
+       HarfBuzzSharp ship multi-MB .pdb files alongside their native DLLs
+       (libSkiaSharp.pdb is ~80MB) and the .NET SDK has no first-class knob to
+       suppress them — they're shipped as runtime assets, so neither
+       DebugType=embedded nor CopyDebugSymbolFilesFromPackages applies. -->
+  <Target Name="StripNativePdbs" AfterTargets="Publish">
+    <ItemGroup>
+      <_NativePdbsToDelete Include="$(PublishDir)*.pdb" />
+    </ItemGroup>
+    <Delete Files="@(_NativePdbsToDelete)" />
+    <Message Text="Stripped native .pdb files from $(PublishDir)" Importance="high"
+             Condition="'@(_NativePdbsToDelete)' != ''" />
+  </Target>
 
 </Project>

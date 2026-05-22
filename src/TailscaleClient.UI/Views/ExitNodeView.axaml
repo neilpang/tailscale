@@ -18,7 +18,7 @@
                         Content="Don't use any"
                         Command="{Binding ClearExitNodeCommand}" />
                 <CheckBox Margin="16,0,0,0" VerticalAlignment="Center"
-                          Content="Allow LAN access"
+                          Content="Don't route LAN through exit node"
                           IsChecked="{Binding Service.ExitNodeAllowLan, Mode=OneWay}"
                           Click="ExitNodeAllowLan_Click" />
             </StackPanel>

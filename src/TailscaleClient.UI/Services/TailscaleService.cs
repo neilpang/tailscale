@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
+using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using TailscaleClient.Core.LocalApi;
 using TailscaleClient.Core.Models;
@@ -17,9 +18,11 @@ namespace TailscaleClient.UI.Services;
 public sealed class TailscaleService : INotifyPropertyChanged, IDisposable
 {
     private readonly LocalApiClient _api;
+    private readonly UserSettings _settings;
     private readonly CancellationTokenSource _cts = new();
     private Task? _busTask;
     private Task? _pollTask;
+    private Task? _drainTask;
 
     private Status? _status;
     private Prefs? _prefs;
@@ -27,12 +30,16 @@ public sealed class TailscaleService : INotifyPropertyChanged, IDisposable
     private string? _lastError;
     private bool _isConnecting;
 
-    public TailscaleService() : this(new LocalApiClient()) { }
+    public TailscaleService(UserSettings settings) : this(new LocalApiClient(), settings) { }
 
-    public TailscaleService(LocalApiClient api)
+    public TailscaleService(LocalApiClient api, UserSettings settings)
     {
         _api = api;
+        _settings = settings;
     }
+
+    /// <summary>Fires after the auto-save loop drains one or more files from the daemon inbox.</summary>
+    public event Action? TaildropChanged;
 
     // ─────────────────── Observable state ───────────────────
 
@@ -186,6 +193,7 @@ public sealed class TailscaleService : INotifyPropertyChanged, IDisposable
         await RefreshAsync().ConfigureAwait(false);
         _busTask = Task.Run(() => PumpBusAsync(_cts.Token));
         _pollTask = Task.Run(() => PollLoopAsync(_cts.Token));
+        _drainTask = Task.Run(() => DrainTaildropLoopAsync(_cts.Token));
     }
 
     public async Task RefreshAsync(CancellationToken ct = default)
@@ -339,6 +347,76 @@ public sealed class TailscaleService : INotifyPropertyChanged, IDisposable
 
     // ─────────────────── Taildrop ───────────────────
 
+    private async Task DrainTaildropLoopAsync(CancellationToken ct)
+    {
+        // Daemon's file list only exposes completed files, so we don't risk
+        // racing a partial transfer. 3s feels live without hammering the API.
+        while (!ct.IsCancellationRequested)
+        {
+            try { await Task.Delay(TimeSpan.FromSeconds(3), ct).ConfigureAwait(false); }
+            catch (OperationCanceledException) { return; }
+
+            var folder = _settings.TaildropAutoSaveFolder;
+            if (string.IsNullOrEmpty(folder)) continue;
+            if (!Directory.Exists(folder)) continue;
+
+            List<TaildropFile> files;
+            try { files = await _api.ListTaildropFilesAsync(ct).ConfigureAwait(false); }
+            catch { continue; }
+            if (files.Count == 0) continue;
+
+            var saved = 0;
+            foreach (var f in files)
+            {
+                if (ct.IsCancellationRequested) break;
+                try
+                {
+                    var target = GetUniquePath(folder, f.Name);
+                    await using (var src = await _api.DownloadTaildropFileAsync(f.Name, ct).ConfigureAwait(false))
+                    await using (var dst = File.Create(target))
+                    {
+                        await src.CopyToAsync(dst, ct).ConfigureAwait(false);
+                    }
+                    await _api.DeleteTaildropFileAsync(f.Name, ct).ConfigureAwait(false);
+
+                    var fileName = Path.GetFileName(target);
+                    Dispatcher.UIThread.Post(() =>
+                        Toast.Show("Taildrop", $"Saved {fileName}", NotificationType.Success));
+                    saved++;
+                }
+                catch (Exception ex)
+                {
+                    LastError = $"Auto-save failed for {f.Name}: {ex.Message}";
+                }
+            }
+
+            if (saved > 0)
+                Dispatcher.UIThread.Post(() => TaildropChanged?.Invoke());
+        }
+    }
+
+    private static string GetUniquePath(string folder, string fileName)
+    {
+        var safe = MakeSafeFileName(fileName);
+        var path = Path.Combine(folder, safe);
+        if (!File.Exists(path)) return path;
+        var stem = Path.GetFileNameWithoutExtension(safe);
+        var ext = Path.GetExtension(safe);
+        for (var i = 1; i < 1000; i++)
+        {
+            var candidate = Path.Combine(folder, $"{stem} ({i}){ext}");
+            if (!File.Exists(candidate)) return candidate;
+        }
+        return Path.Combine(folder, $"{stem} ({Guid.NewGuid():N}){ext}");
+    }
+
+    private static string MakeSafeFileName(string name)
+    {
+        foreach (var c in Path.GetInvalidFileNameChars())
+            name = name.Replace(c, '_');
+        return string.IsNullOrWhiteSpace(name) ? "file" : name;
+    }
+
     public Task<List<TaildropFile>> ListTaildropFilesAsync() =>
         _api.ListTaildropFilesAsync(_cts.Token);
 
@@ -369,6 +447,7 @@ public sealed class TailscaleService : INotifyPropertyChanged, IDisposable
         _cts.Cancel();
         try { _busTask?.Wait(TimeSpan.FromSeconds(2)); } catch { }
         try { _pollTask?.Wait(TimeSpan.FromSeconds(2)); } catch { }
+        try { _drainTask?.Wait(TimeSpan.FromSeconds(2)); } catch { }
         _cts.Dispose();
         _api.Dispose();
     }

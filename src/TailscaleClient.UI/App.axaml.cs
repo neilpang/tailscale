@@ -43,6 +43,7 @@ public partial class App : Application
     private static IServiceProvider BuildServices()
     {
         var sc = new ServiceCollection();
+        sc.AddSingleton<UserSettings>();
         sc.AddSingleton<TailscaleService>();
         sc.AddSingleton<MainViewModel>();
         sc.AddSingleton<MainWindow>();
