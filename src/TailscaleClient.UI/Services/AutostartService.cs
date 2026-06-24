@@ -31,10 +31,9 @@ public static class AutostartService
         return new NoopAutostart();
     }
 
-    /// <summary>Best-effort path to the running executable for autostart registration.
-    /// Single-file publish gives the .exe directly; dev builds give the host dll.</summary>
-    internal static string ExePath() =>
-        Environment.ProcessPath ?? System.Reflection.Assembly.GetEntryAssembly()?.Location ?? "";
+    /// <summary>Path to the running executable for autostart registration.
+    /// Works for both framework-dependent and single-file publish.</summary>
+    internal static string ExePath() => Environment.ProcessPath ?? "";
 }
 
 internal sealed class NoopAutostart : IAutostartService
